@@ -1,0 +1,308 @@
+# ScrapCo V2 — Business Model
+
+## 1. Overview
+
+ScrapCo is a two-sided commission-based marketplace that connects scrap sellers with verified vendors and facilitates structured transactions.
+
+Revenue is generated through commission on completed scrap transactions.
+
+The platform must remain asset-light and scalable.
+
+---
+
+## 2. Marketplace Structure
+
+### Supply Side
+- Sellers (households, shops, businesses)
+- Provide scrap materials
+
+### Demand Side
+- Vendors (scrap collectors)
+- Purchase scrap from sellers
+- Resell to recyclers or aggregators
+
+ScrapCo operates as an intermediary platform.
+
+---
+
+## 3. Revenue Model
+
+### Primary Revenue Source
+
+Platform commission on completed pickup transactions.
+
+Formula:
+
+Commission = Final Transaction Value × Commission Rate
+
+Commission Rate:
+- Configurable per region
+- Default: 5%–15% range
+- Must be adjustable without code change
+
+---
+
+### Example
+
+If:
+- Scrap total = ₹2,000
+- Commission rate = 10%
+
+Platform earns:
+₹200
+
+Vendor receives:
+₹1,800
+
+Commission must be stored per transaction for audit and reporting.
+
+---
+
+## 4. Future Revenue Streams
+
+1. Vendor Subscription Plans
+   - Priority dispatch
+   - Reduced commission
+   - Analytics access
+
+2. Featured Listing Boost
+   - Paid visibility
+
+3. Recycler-side margin (Phase 3)
+
+4. Data & Insights Services
+
+5. Logistics premium services
+
+Architecture must support revenue extension without structural rewrite.
+
+---
+
+## 5. Pricing Model
+
+### Phase 1 Pricing
+
+- Static scrap rates per region
+- Managed by admin
+- One active rate per scrap type per region
+
+### Phase 2 Pricing
+
+- Vendor offer-based pricing
+- Competitive bidding
+
+### Phase 3 Pricing
+
+- Dynamic pricing engine
+- Demand-supply logic
+- Region-aware pricing adjustment
+
+Rates must be region-scoped.
+
+---
+
+## 6. Vendor Incentive Model
+
+Vendors are motivated by:
+
+- Lead volume
+- Predictable assignment
+- Rating visibility
+- Digital tracking
+- Transparent payout records
+
+Vendor ranking logic should consider:
+
+- Acceptance rate
+- Response time
+- Rating
+- Cancellation frequency
+- Capacity utilization
+
+These metrics must be trackable.
+
+---
+
+## 7. Seller Value Proposition
+
+Sellers receive:
+
+- Transparent pricing
+- Verified vendors
+- Digital confirmation
+- Status tracking
+- Reliable pickup
+- No bargaining
+
+Trust is core.
+
+---
+
+## 8. Operational Flow (Transaction Lifecycle)
+
+1. Seller creates pickup request.
+2. Dispatch engine selects vendor.
+3. Vendor accepts.
+4. Pickup completed.
+5. Weight confirmed.
+6. Final amount calculated.
+7. Commission deducted.
+8. Transaction recorded.
+9. Ratings submitted.
+
+Every stage must be logged.
+
+---
+
+## 9. Risk Model
+
+### Key Risks
+
+1. Vendor No-Show
+2. Pricing disputes
+3. Fake bookings
+4. System abuse
+5. Commission leakage
+6. Region imbalance
+7. Vendor capacity overload
+
+System must include:
+
+- Cancellation tracking
+- Rating penalties
+- Fraud detection flags
+- Dispatch fallback logic
+
+---
+
+## 10. Commission Flexibility
+
+Commission must be configurable by:
+
+- Region
+- Scrap Type (future)
+- Vendor Tier (future)
+- Promotion logic
+
+Stored in database, not hardcoded.
+
+---
+
+## 11. Refund & Adjustment Policy (Future Ready)
+
+If:
+- Weight dispute
+- Pricing error
+- Duplicate transaction
+
+Platform must support:
+
+- Adjustment entries
+- Transaction correction log
+- Audit trail
+
+No deletion of transactions allowed.
+
+---
+
+## 12. Vendor Competition Model (Phase 2)
+
+Two options supported:
+
+### Sequential Offer (Phase 1)
+Vendor offered in ranked order.
+
+### Parallel Offer (Phase 2)
+Multiple vendors receive offer.
+Seller chooses.
+Platform confirms.
+
+Database must support both.
+
+---
+
+## 13. Unit Economics (Simplified)
+
+Revenue = Commission × Completed Pickups
+
+Cost Factors:
+- Infra cost
+- Support operations
+- Payment processing (future)
+- Marketing acquisition
+- Incentives
+
+Marketplace must track:
+
+- Gross merchandise value (GMV)
+- Net revenue
+- Vendor payout totals
+- Region revenue breakdown
+
+---
+
+## 14. Key Business Metrics
+
+Must be measurable:
+
+- Total pickups created
+- Completed pickups
+- Assignment time
+- Vendor acceptance rate
+- Cancellation rate
+- Average order value
+- Commission revenue
+- Revenue per region
+- Vendor churn rate
+- Seller retention rate
+
+Metrics must be extractable from database.
+
+---
+
+## 15. Scaling Strategy
+
+Step 1:
+- Optimize dispatch
+- Build vendor trust
+
+Step 2:
+- Introduce competition
+
+Step 3:
+- Introduce wallet & payment layer
+
+Step 4:
+- Integrate recyclers
+
+Step 5:
+- Expand nationally
+
+---
+
+## 16. Marketplace Guardrails
+
+The system must:
+
+- Never allow negative vendor balance without audit
+- Never delete completed transactions
+- Never allow vendor assignment without region match
+- Never allow unverified vendor dispatch
+- Never allow silent status changes
+
+Every financial movement must be traceable.
+
+---
+
+## 17. Strategic Objective
+
+Short Term:
+Operational stability in 3 cities.
+
+Medium Term:
+Marketplace competition and vendor scaling.
+
+Long Term:
+Become infrastructure layer for organized scrap ecosystem.
+
+Architecture must never restrict this objective.
