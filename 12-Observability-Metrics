@@ -1,0 +1,360 @@
+````markdown id="observability-metrics-01"
+# ScrapCo V2 — Observability & Metrics Specification
+
+## 1. Observability Philosophy
+
+If you cannot measure it, you cannot scale it.
+
+ScrapCo V2 must include:
+
+- Structured logging
+- Centralized log aggregation
+- Real-time metrics
+- Alerting
+- Error tracking
+- Business analytics metrics
+- Dispatch performance metrics
+
+Observability is mandatory, not optional.
+
+---
+
+## 2. Core Observability Pillars
+
+1. Logs
+2. Metrics
+3. Traces (optional Phase 2)
+4. Alerts
+5. Business KPIs
+
+---
+
+## 3. Logging Requirements
+
+### 3.1 Structured Logging
+
+All services (API + Worker) must use:
+
+- Pino (or equivalent structured logger)
+
+Log format must include:
+
+- timestamp
+- level
+- service (api/worker/web)
+- requestId
+- userId (if authenticated)
+- route
+- regionId (if applicable)
+- event type
+
+Example:
+
+```json
+{
+  "level": "info",
+  "timestamp": "2025-01-01T00:00:00Z",
+  "service": "worker",
+  "event": "VendorOfferSent",
+  "pickupId": "uuid",
+  "vendorId": "uuid"
+}
+````
+
+No raw console.log allowed in production.
+
+---
+
+### 3.2 Correlation ID
+
+Every request must:
+
+* Generate a unique requestId
+* Propagate requestId across:
+
+  * API
+  * Worker
+  * Real-time events
+  * Logs
+
+Allows traceability of pickup lifecycle.
+
+---
+
+## 4. Error Monitoring
+
+Must integrate:
+
+* Sentry (or equivalent)
+
+Track:
+
+* Unhandled exceptions
+* Dispatch failures
+* WebSocket failures
+* DB connection errors
+* Redis connection errors
+
+All errors must include:
+
+* requestId
+* userId (if applicable)
+* regionId
+
+---
+
+## 5. Technical Metrics
+
+### 5.1 API Metrics
+
+Track:
+
+* Request count
+* Error rate
+* P95 response time
+* Rate limit triggers
+* Auth failures
+
+---
+
+### 5.2 Worker Metrics
+
+Track:
+
+* Dispatch job count
+* Offer creation rate
+* Offer acceptance rate
+* Offer expiry rate
+* Retry count
+* Queue backlog size
+* Assignment time
+
+Assignment time =
+PickupCreated → VendorAssigned
+
+---
+
+### 5.3 Redis Metrics
+
+Track:
+
+* Queue length
+* Delayed job count
+* Memory usage
+* Connection health
+
+---
+
+### 5.4 Database Metrics
+
+Track:
+
+* Query latency
+* Slow queries
+* Connection pool usage
+* Index scan vs sequential scan ratio
+
+No unindexed heavy queries allowed.
+
+---
+
+## 6. Business Metrics (Marketplace KPIs)
+
+### 6.1 Core KPIs
+
+* Total pickups created
+* Completed pickups
+* Cancelled pickups
+* Unassigned pickups
+* Assignment success rate
+* Vendor acceptance rate
+* Average assignment time
+* Average pickup value
+* Commission revenue
+* Revenue per region
+
+---
+
+### 6.2 Vendor Metrics
+
+* Acceptance rate
+* Response time
+* Rejection rate
+* Completion rate
+* Average rating
+* Daily capacity utilization
+
+---
+
+### 6.3 Seller Metrics
+
+* Repeat usage rate
+* Cancellation rate
+* Rating distribution
+
+---
+
+## 7. Alerting Rules
+
+Alerts must trigger for:
+
+* Dispatch failure spike (>10% in 5 mins)
+* Offer expiry spike
+* Assignment time > threshold
+* Worker crash
+* Redis disconnected
+* DB connection failure
+* High error rate (>5% API errors)
+* High queue backlog
+
+Alerts must notify:
+
+* Email
+* Slack (optional)
+* Pager (future)
+
+---
+
+## 8. Real-Time Monitoring Dashboard
+
+Admin dashboard must display:
+
+* Live pickups
+* Live assignments
+* Queue backlog
+* Active vendors
+* Region performance
+* Acceptance rate
+
+Data must refresh via real-time.
+
+---
+
+## 9. Audit Log Monitoring
+
+Audit logs must track:
+
+* State transitions
+* Admin changes
+* Commission changes
+* Assignment overrides
+* Manual adjustments
+
+Audit logs must be:
+
+* Queryable
+* Exportable
+* Immutable
+
+---
+
+## 10. SLA Metrics
+
+Define service-level objectives:
+
+* API uptime ≥ 99%
+* Dispatch assignment < 5 minutes (P95)
+* Vendor notification latency < 5 seconds
+* Real-time update latency < 2 seconds
+
+---
+
+## 11. Data Retention Policy
+
+Logs:
+
+* Retain 30–90 days minimum
+
+Metrics:
+
+* Store aggregated metrics long-term
+
+Audit logs:
+
+* Never deleted
+* Archived if needed
+
+---
+
+## 12. Failure Detection Strategy
+
+System must detect:
+
+* Stuck pickup (PENDING too long)
+* Repeated rejection chain
+* Region without active vendors
+* Offer loop failure
+* Assignment duplication attempt
+
+Automatic anomaly detection optional Phase 2.
+
+---
+
+## 13. Performance Thresholds
+
+Dispatch performance must:
+
+* Handle 1000 concurrent pickups
+* Process offer expiry without delay
+* Maintain queue under threshold
+
+API must:
+
+* Maintain P95 < 300ms
+
+---
+
+## 14. Observability Guardrails
+
+System must never:
+
+* Hide errors silently
+* Swallow worker failures
+* Log sensitive secrets
+* Disable monitoring in production
+* Ignore repeated dispatch failures
+
+---
+
+## 15. Analytics Integration
+
+Web + Mobile must track:
+
+* Pickup creation funnel
+* Offer acceptance funnel
+* Drop-off rate
+* Region-wise growth
+
+Analytics must not block core flow.
+
+---
+
+## 16. Future Observability Expansion
+
+Phase 2 improvements:
+
+* Distributed tracing
+* OpenTelemetry
+* Centralized metrics store (Prometheus)
+* Real-time operational heatmap
+
+Not required in Phase 1 but architecture must allow integration.
+
+---
+
+## 17. Summary
+
+ScrapCo V2 observability must ensure:
+
+* Full lifecycle visibility
+* Real-time operational insight
+* Marketplace health monitoring
+* Dispatch performance tracking
+* Revenue tracking
+* Incident detection
+
+Without observability, scaling is blind.
+
+No production deployment without monitoring.
+
+```
