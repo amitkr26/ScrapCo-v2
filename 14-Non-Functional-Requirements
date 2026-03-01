@@ -1,0 +1,314 @@
+```markdown id="non-functional-requirements-01"
+# ScrapCo V2 — Non-Functional Requirements (NFR)
+
+## 1. NFR Philosophy
+
+Non-functional requirements define system quality.
+
+ScrapCo V2 must not only work — it must be:
+
+- Reliable
+- Secure
+- Scalable
+- Performant
+- Observable
+- Maintainable
+- Resilient
+- Auditable
+
+Functional features are secondary to system stability.
+
+---
+
+## 2. Performance Requirements
+
+### 2.1 API Performance
+
+- P95 response time < 300ms
+- P99 response time < 800ms
+- Authentication middleware overhead < 50ms
+- DB query latency < 100ms for indexed queries
+
+---
+
+### 2.2 Dispatch Performance
+
+- Assignment time (P95) < 5 minutes
+- Offer creation latency < 2 seconds
+- Expiry handling delay < 5 seconds
+- Worker job processing concurrency supported
+
+---
+
+### 2.3 Web Performance
+
+- Lighthouse Performance > 90
+- LCP < 2.5 seconds
+- TTFB < 500ms
+- CLS < 0.1
+- INP within acceptable threshold
+
+---
+
+### 2.4 Mobile Performance
+
+- Smooth performance on low-end Android
+- No UI freeze > 200ms
+- Push notification latency < 10 seconds
+- No polling loops
+
+---
+
+## 3. Scalability Requirements
+
+System must support:
+
+- 10x traffic growth without redesign
+- Horizontal API scaling
+- Horizontal worker scaling
+- Multi-city expansion
+- Multi-region vendor pools
+- Concurrent dispatch processing
+
+Dispatch must not depend on:
+
+- Single process memory
+- Single worker instance
+
+---
+
+## 4. Reliability Requirements
+
+- API uptime ≥ 99%
+- Worker restart does not lose dispatch state
+- Redis failure does not corrupt DB
+- Database backup enabled
+- Health check endpoint required
+
+No silent failure allowed.
+
+---
+
+## 5. Availability Requirements
+
+- Deployment without downtime
+- Graceful shutdown support
+- Retry logic for transient failures
+- Circuit breaker pattern (optional Phase 2)
+
+System must degrade gracefully under load.
+
+---
+
+## 6. Security Requirements
+
+Must ensure:
+
+- JWT-based authentication
+- Role-based authorization
+- HMAC-secured webhooks
+- Rate limiting
+- Strict CORS
+- No environment flag-based admin
+- No public vendor write endpoints
+- Secret rotation support
+
+No exposed service-role keys.
+
+---
+
+## 7. Data Integrity Requirements
+
+System must:
+
+- Prevent duplicate assignment
+- Prevent expired offer acceptance
+- Enforce region match
+- Enforce one transaction per pickup
+- Maintain immutable transaction records
+- Log all state transitions
+
+All financial data must be auditable.
+
+---
+
+## 8. Maintainability Requirements
+
+Codebase must:
+
+- Use strict TypeScript
+- Follow modular architecture
+- Avoid duplicated logic
+- Use centralized validation
+- Have clear folder structure
+- Include test coverage for core logic
+- Avoid dead code
+
+Code must be readable and reviewable.
+
+---
+
+## 9. Testability Requirements
+
+Minimum:
+
+- Unit tests for dispatch logic
+- Unit tests for auth middleware
+- Integration tests for pickup lifecycle
+- Validation tests for input schemas
+
+CI must fail if tests fail.
+
+---
+
+## 10. Observability Requirements
+
+Must include:
+
+- Structured logs
+- Correlation IDs
+- Error tracking
+- Dispatch metrics
+- Vendor acceptance metrics
+- Assignment time metrics
+- Revenue tracking
+
+No blind deployment.
+
+---
+
+## 11. Compliance & Audit Requirements
+
+System must:
+
+- Log all admin actions
+- Log commission changes
+- Log assignment changes
+- Store audit logs permanently
+- Support export of financial records
+
+No record deletion of financial data allowed.
+
+---
+
+## 12. Configuration Requirements
+
+- All environment variables validated at startup
+- No fallback to insecure defaults
+- No production config stored in code
+- Clear separation of staging and production
+
+Misconfigured environment must fail fast.
+
+---
+
+## 13. Resilience Requirements
+
+System must handle:
+
+- Worker crash
+- Redis restart
+- Database temporary unavailability
+- Vendor webhook failure
+- Network spikes
+
+Dispatch must resume safely.
+
+---
+
+## 14. Extensibility Requirements
+
+Architecture must allow:
+
+- Competitive vendor model
+- Wallet system
+- Payment integration
+- Recycler integration
+- Multi-language support
+- Analytics microservice
+- AI dispatch optimization
+
+Without structural rewrite.
+
+---
+
+## 15. Accessibility Requirements
+
+Web:
+
+- WCAG AA compliance
+- Keyboard navigable
+- Screen reader friendly
+- Reduced motion support
+
+Mobile:
+
+- Accessibility labels
+- Scalable text
+- High contrast support
+
+---
+
+## 16. Backup & Recovery Requirements
+
+- Daily DB backups
+- Restore testing plan
+- Redis persistence configured
+- Disaster recovery documentation
+
+Recovery must not require manual DB rebuild.
+
+---
+
+## 17. Deployment Requirements
+
+- Automated CI/CD
+- Zero manual production SSH
+- Health check endpoints required
+- Rollback support
+- Versioned releases
+
+---
+
+## 18. Prohibited Practices
+
+System must never:
+
+- Use polling for lifecycle
+- Use in-memory dispatch state
+- Use environment flag admin access
+- Hardcode region logic
+- Skip validation
+- Log secrets
+- Deploy without monitoring
+- Ignore error spikes
+
+---
+
+## 19. Success Criteria
+
+ScrapCo V2 meets NFR when:
+
+- Stable under 10x simulated load
+- Dispatch consistent
+- No critical security findings
+- No duplicate assignments
+- No revenue mismatch
+- Observability dashboards operational
+- CI pipeline reliable
+
+---
+
+## 20. Summary
+
+Non-functional requirements ensure ScrapCo V2 is:
+
+- Production-grade
+- Scalable
+- Secure
+- Reliable
+- Observable
+- Maintainable
+
+If NFRs are violated, feature work must pause until resolved.
+```
