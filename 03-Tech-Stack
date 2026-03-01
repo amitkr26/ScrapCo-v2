@@ -1,0 +1,345 @@
+
+---
+
+## 3. Backend Stack (API)
+
+### Runtime
+- Node.js >= 20
+
+### Language
+- TypeScript (strict mode enabled)
+
+### Framework
+Preferred:
+- NestJS
+
+Alternative (if chosen):
+- Express (modular structure required)
+
+### Validation
+- Zod (shared schemas)
+- No manual validation logic
+
+### Authentication
+- Supabase Auth (JWT)
+- Role-based middleware
+
+### Database Access
+- Supabase Postgres
+- Direct SQL OR Drizzle ORM (optional but recommended)
+- No raw string SQL in route handlers
+
+### Queue
+- Redis
+- BullMQ
+
+### Logging
+- Pino
+
+### Security
+- Helmet
+- express-rate-limit
+- CORS (strict origin allowlist)
+
+---
+
+## 4. Worker Stack
+
+### Runtime
+- Node.js >= 20
+
+### Queue Processor
+- BullMQ Worker
+
+### Responsibilities
+- Dispatch orchestration
+- Offer expiry handling
+- Retry logic
+- Event emission
+
+Worker must:
+- Not expose HTTP endpoints
+- Not share memory with API
+- Not depend on local state
+
+---
+
+## 5. Database Stack
+
+### Primary Database
+- PostgreSQL (Supabase Managed)
+
+### Requirements
+- Row Level Security enabled
+- Indexed foreign keys
+- Enum types for status fields
+- Migration files versioned
+- No schema drift
+
+### Migration Tool
+- Drizzle Kit OR Supabase CLI migrations
+
+---
+
+## 6. Redis Stack
+
+### Provider
+- Managed Redis (Redis Cloud / Upstash / Fly Redis)
+
+### Usage
+- BullMQ queues
+- Rate limiting store
+- Short-lived caching
+- Distributed locking
+
+Redis must NOT:
+- Store authoritative business data permanently
+
+---
+
+## 7. Web Application Stack
+
+### Framework
+- Next.js (App Router)
+
+### Rendering Strategy
+- Server Components by default
+- Client Components minimal
+- SSR for SEO pages
+- Static generation for city pages
+
+### State Management
+- React Server State
+- SWR for client fetch caching
+- No Redux
+
+### Styling
+- Tailwind CSS
+- Design tokens centralized
+
+### SEO
+- Metadata API
+- JSON-LD injection
+- Sitemap generation
+- Robots.txt
+
+---
+
+## 8. Mobile Application Stack
+
+### Framework
+- Expo (latest stable)
+- React Native
+
+### Navigation
+- React Navigation
+
+### State
+- Context API (modularized)
+- React Query (optional)
+
+### Realtime
+- Supabase Realtime OR WebSocket client
+
+### Push Notifications
+- Expo Notifications
+
+### Storage
+- SecureStore for tokens
+- AsyncStorage for non-sensitive state
+
+### Important Constraint
+- No polling
+- No hardcoded API keys
+- No environment bypass auth
+
+---
+
+## 9. Shared Packages
+
+### packages/shared
+
+Contains:
+- Zod schemas
+- TypeScript interfaces
+- Status enums
+- Role enums
+- Event types
+- Validation schemas
+
+Shared package must be:
+- Imported by web, mobile, api, worker
+
+Single source of truth.
+
+---
+
+### packages/config
+
+Contains:
+- Environment variable validation
+- Zod-based env schema
+- Production safety checks
+
+App must fail if:
+- Required env missing
+- Invalid env format
+
+---
+
+## 10. CI/CD Stack
+
+### Platform
+- GitHub Actions
+
+### Required Jobs
+- Lint
+- Type check
+- Unit tests
+- Build
+- Migration check
+
+### Deployment Targets
+
+Web:
+- Vercel
+
+API:
+- Fly.io OR Render
+
+Worker:
+- Fly.io OR Render
+
+---
+
+## 11. Monitoring & Error Tracking
+
+### Error Tracking
+- Sentry
+
+### Logs
+- Pino structured logs
+- Log aggregation via provider
+
+### Metrics
+- Dispatch success rate
+- Vendor acceptance rate
+- Assignment time
+- Queue backlog size
+
+---
+
+## 12. Security Stack
+
+- Helmet middleware
+- Rate limiting (Redis-backed)
+- Strict CORS origin list
+- JWT verification middleware
+- HMAC verification for vendor callbacks
+- No environment flag-based authorization
+- No service-role in request context except worker
+
+---
+
+## 13. Testing Stack
+
+Backend:
+- Jest
+- Supertest
+
+Web:
+- React Testing Library
+
+Mobile:
+- Jest + React Native Testing Library
+
+Minimum requirement:
+- Core dispatch flow tested
+- Auth middleware tested
+- Assignment logic tested
+
+---
+
+## 14. Environment Variables
+
+Must include:
+
+API:
+- DATABASE_URL
+- SUPABASE_URL
+- SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- REDIS_URL
+- JWT_SECRET (if required)
+- HMAC_SECRET
+- NODE_ENV
+
+Web:
+- NEXT_PUBLIC_API_URL
+
+Mobile:
+- EXPO_PUBLIC_API_URL
+
+All environment variables must be validated at startup.
+
+---
+
+## 15. Prohibited Technologies
+
+The system must NOT use:
+
+- In-memory dispatch timers
+- Polling for lifecycle updates
+- Public admin routes
+- Hardcoded region logic
+- Client-side business logic
+- Unvalidated inputs
+
+---
+
+## 16. Performance Targets
+
+Web:
+- Lighthouse > 90
+- TTFB < 500ms
+- LCP < 2.5s
+
+API:
+- P95 response < 300ms
+- Dispatch assignment < 5 minutes
+
+Worker:
+- Handle 1000+ concurrent dispatch jobs
+
+---
+
+## 17. Scalability Requirements
+
+System must support:
+
+- Horizontal scaling of API
+- Horizontal scaling of Worker
+- Redis-backed locking
+- Region-based scaling
+- Multi-city configuration without code change
+
+---
+
+## 18. Tech Stack Summary
+
+Backend:
+- Node + NestJS + Postgres + Redis + BullMQ
+
+Web:
+- Next.js + Tailwind + SWR
+
+Mobile:
+- Expo + Realtime + Push
+
+Infra:
+- Supabase + Redis Cloud + Vercel + Fly.io
+
+Monitoring:
+- Sentry + Structured Logs
+
+All components must follow strict typing, modular architecture, and event-driven principles.
