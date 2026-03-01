@@ -1,0 +1,271 @@
+# ScrapCo V2 — Product Vision
+
+## 1. Executive Summary
+
+ScrapCo is a two-sided digital marketplace platform connecting scrap sellers (households and small businesses) with verified scrap collectors (vendors) in a structured, transparent, and scalable way.
+
+ScrapCo is NOT a simple booking website.
+ScrapCo is NOT a manual dispatch service.
+
+ScrapCo is a logistics-enabled marketplace platform designed to scale from 3 cities to 30+ cities without architectural redesign.
+
+Initial launch cities:
+- Narnaul
+- Gorakhpur
+- Singhana
+
+Architecture must assume national scalability from day one.
+
+---
+
+## 2. Core Problem
+
+India’s scrap market is:
+
+- Informal
+- Price-opaque
+- Vendor-dependent
+- Non-standardized
+- Offline-heavy
+- Operationally fragmented
+
+Sellers face:
+- Uncertain pricing
+- Unreliable pickup
+- No digital records
+- No transparency
+- No safety assurance
+
+Vendors face:
+- Inconsistent demand
+- No structured lead flow
+- No digital tracking
+- No standardized rating system
+- No operational optimization
+
+ScrapCo solves this fragmentation through platformization.
+
+---
+
+## 3. Product Type
+
+ScrapCo is a:
+
+Two-Sided Marketplace Platform with Logistics Coordination
+
+Actors:
+
+1. Seller (Household / Business)
+2. Vendor (Scrap Collector)
+3. Recycler (Future Phase)
+4. Admin / Ops
+
+Platform Role:
+- Match supply with demand
+- Standardize pricing
+- Manage dispatch
+- Enforce accountability
+- Maintain digital records
+- Enable trust
+
+---
+
+## 4. Marketplace Model Strategy
+
+ScrapCo will evolve in phases:
+
+### Phase 1: Controlled Matching
+- Sequential vendor offering
+- Smart ranking by rating, region, availability
+- Platform-controlled assignment
+
+### Phase 2: Competitive Offers
+- Multiple vendors receive offer
+- Vendors compete (price or speed)
+- Seller visibility into options
+
+### Phase 3: Dynamic Marketplace
+- Real-time bidding
+- Wallet system
+- Commission logic
+- Multi-tier buyer network
+
+Architecture must support all three phases without structural rewrite.
+
+---
+
+## 5. Geographic Expansion Strategy
+
+Initial cities:
+- Narnaul
+- Gorakhpur
+- Singhana
+
+Expansion plan:
+- Add city as a data configuration (not hard-coded)
+- Region-aware dispatch
+- Vendor-region mapping
+- Capacity scaling per region
+
+System must allow:
+- Region-specific scrap rates
+- Region-specific vendor pools
+- Region-based analytics
+- Regional admin oversight
+
+---
+
+## 6. Revenue Model
+
+Primary revenue stream:
+- Commission on completed transactions
+
+Future revenue streams:
+- Premium vendor subscription
+- Dynamic pricing margin
+- Recycler-side margin
+- Featured listing priority
+- Data insights services
+
+Revenue logic must be abstracted and configurable.
+
+---
+
+## 7. Trust & Safety Model
+
+ScrapCo must build trust via:
+
+- Verified vendors
+- Vendor rating system
+- Transparent pricing
+- Digital weight confirmation
+- Audit logs
+- Role-based access control
+- Secure payment record tracking (future phase)
+
+Every pickup must be traceable.
+
+Every status change must be logged.
+
+---
+
+## 8. Platform Principles
+
+1. No critical business logic in memory
+2. No environment flag-based authorization
+3. No manual-only dispatch dependency
+4. No polling-based lifecycle updates
+5. All state changes must be auditable
+6. All workflows must be idempotent
+7. All dispatch must survive server restarts
+8. All cities treated as configuration, not code
+
+---
+
+## 9. Scalability Vision
+
+ScrapCo must scale across:
+
+- Cities
+- Vendors
+- Users
+- Transactions
+- Regions
+- Worker processes
+
+Architecture must support:
+- Horizontal scaling
+- Queue-based dispatch
+- Event-driven lifecycle
+- Real-time updates
+- Analytics tracking
+
+---
+
+## 10. Product Constraints
+
+ScrapCo V2 will:
+
+- Avoid over-engineering in Phase 1
+- Focus on core marketplace mechanics
+- Avoid premature wallet/payment complexity
+- Avoid microservices until required
+
+But must NOT:
+- Use in-memory dispatch
+- Use polling for lifecycle updates
+- Use public admin routes
+- Hardcode region logic
+
+---
+
+## 11. Competitive Positioning
+
+ScrapCo differentiates by:
+
+- Structured dispatch
+- Transparent pricing
+- Vendor accountability
+- Digital lifecycle tracking
+- Multi-city scalability
+- Data-driven marketplace logic
+
+Long-term goal:
+Become the standardized scrap trading infrastructure layer.
+
+---
+
+## 12. Long-Term Vision
+
+ScrapCo will evolve into:
+
+- A logistics-tech marketplace
+- A recycler integration platform
+- A data-driven recycling network
+- A multi-tier scrap aggregation system
+
+The backend architecture must not limit this evolution.
+
+---
+
+## 13. Definition of Success (Phase 1)
+
+Success metrics for first 3 cities:
+
+- Stable dispatch under 10x load
+- Vendor acceptance > 60%
+- Assignment time < 5 minutes
+- Zero critical security vulnerabilities
+- Zero manual intervention in assignment logic
+- Fully auditable lifecycle
+
+---
+
+## 14. Non-Goals (Important)
+
+ScrapCo V2 is NOT:
+
+- A chat app
+- A social network
+- A heavy AI pricing engine (initially)
+- A fully decentralized marketplace
+- A blockchain-based solution
+
+Focus remains on structured operational excellence.
+
+---
+
+## 15. Final Architectural Mandate
+
+The system must be:
+
+- Secure
+- Scalable
+- Auditable
+- Event-driven
+- Region-aware
+- Queue-based
+- Role-controlled
+- Production-grade
+
+If a feature violates these principles, it must not be implemented.
