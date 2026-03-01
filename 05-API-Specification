@@ -1,0 +1,468 @@
+```markdown id="api-spec-01"
+# ScrapCo V2 — API Specification
+
+## 1. API Philosophy
+
+The API layer must be:
+
+- Stateless
+- Role-aware
+- Strictly validated
+- Idempotent
+- Event-driven
+- Versioned
+- Horizontally scalable
+
+No business-critical logic must depend on memory state.
+
+All endpoints must:
+- Validate input via Zod
+- Enforce JWT authentication
+- Enforce role-based access
+- Return standardized response structure
+
+---
+
+## 2. Base Configuration
+
+Base URL:
+
+```
+
+[https://api.scrapco.app/v1](https://api.scrapco.app/v1)
+
+```
+
+Versioning required:
+
+```
+
+/v1/
+
+````
+
+---
+
+## 3. Standard Response Format
+
+### Success
+
+```json
+{
+  "success": true,
+  "data": {},
+  "meta": {}
+}
+````
+
+### Error
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message"
+  }
+}
+```
+
+No raw error responses allowed.
+
+---
+
+## 4. Authentication
+
+### Auth Type
+
+* Supabase JWT (Bearer Token)
+
+Header:
+
+```
+Authorization: Bearer <jwt>
+```
+
+Vendor webhooks:
+
+* HMAC signature required
+
+---
+
+## 5. Health Check
+
+### GET /v1/health
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "database": "connected",
+    "redis": "connected"
+  }
+}
+```
+
+---
+
+# 6. Seller Endpoints
+
+---
+
+## 6.1 Create Pickup
+
+### POST /v1/pickups
+
+Role: SELLER
+
+Body:
+
+```json
+{
+  "regionId": "uuid",
+  "scheduledAt": "ISO_DATE",
+  "latitude": 0,
+  "longitude": 0,
+  "items": [
+    {
+      "scrapTypeId": "uuid",
+      "estimatedQuantity": 10
+    }
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "pickupId": "uuid",
+    "status": "PENDING"
+  }
+}
+```
+
+Action:
+
+* Insert pickup
+* Insert pickup_items
+* Enqueue dispatch job
+* Emit PickupCreated event
+
+---
+
+## 6.2 Get Pickup Details
+
+### GET /v1/pickups/:id
+
+Role: SELLER or ASSIGNED VENDOR or ADMIN
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "pickup": {},
+    "items": [],
+    "assignment": {},
+    "transaction": {}
+  }
+}
+```
+
+---
+
+## 6.3 Cancel Pickup
+
+### POST /v1/pickups/:id/cancel
+
+Role: SELLER
+
+Conditions:
+
+* Cannot cancel if COMPLETED
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "CANCELLED"
+  }
+}
+```
+
+Audit log required.
+
+---
+
+# 7. Vendor Endpoints
+
+---
+
+## 7.1 Get Assigned Pickups
+
+### GET /v1/vendor/pickups
+
+Role: VENDOR
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {}
+  ]
+}
+```
+
+---
+
+## 7.2 Accept Offer
+
+### POST /v1/vendor/offers/:offerId/accept
+
+Role: VENDOR
+
+Validation:
+
+* Offer must belong to vendor
+* Not expired
+* Not already accepted
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ASSIGNED"
+  }
+}
+```
+
+Actions:
+
+* Update offer
+* Create assignment
+* Update pickup status
+* Emit VendorOfferAccepted
+
+---
+
+## 7.3 Reject Offer
+
+### POST /v1/vendor/offers/:offerId/reject
+
+Role: VENDOR
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "REJECTED"
+  }
+}
+```
+
+Dispatch job for next vendor.
+
+---
+
+## 7.4 Update Vendor Location
+
+### POST /v1/vendor/location
+
+Role: VENDOR
+
+Body:
+
+```json
+{
+  "latitude": 0,
+  "longitude": 0
+}
+```
+
+Must require JWT.
+No public write endpoint allowed.
+
+---
+
+# 8. Admin Endpoints
+
+---
+
+## 8.1 Create Scrap Type
+
+### POST /v1/admin/scrap-types
+
+Role: ADMIN
+
+Body:
+
+```json
+{
+  "name": "Plastic"
+}
+```
+
+---
+
+## 8.2 Set Scrap Rate
+
+### POST /v1/admin/scrap-rates
+
+Role: ADMIN
+
+Body:
+
+```json
+{
+  "scrapTypeId": "uuid",
+  "regionId": "uuid",
+  "ratePerKg": 25
+}
+```
+
+Must deactivate previous active rate.
+
+---
+
+## 8.3 Get Region Metrics
+
+### GET /v1/admin/regions/:id/metrics
+
+Role: ADMIN
+
+Returns:
+
+```json
+{
+  "totalPickups": 0,
+  "completedPickups": 0,
+  "revenue": 0,
+  "vendorAcceptanceRate": 0
+}
+```
+
+---
+
+# 9. Worker/Internal Endpoints (Private)
+
+These must not be public.
+
+### POST /internal/dispatch/process
+
+Only accessible by worker service.
+
+---
+
+# 10. Webhook Endpoints
+
+Vendor HMAC required.
+
+---
+
+## 10.1 Vendor Accept Webhook
+
+### POST /v1/webhooks/vendor/accept
+
+Headers:
+
+```
+x-scrapco-signature: <hmac>
+```
+
+Body:
+
+```json
+{
+  "offerId": "uuid"
+}
+```
+
+---
+
+## 11. Idempotency
+
+All mutating endpoints must support:
+
+Header:
+
+```
+Idempotency-Key: uuid
+```
+
+Requests with same key must not create duplicate records.
+
+---
+
+## 12. Rate Limiting
+
+Limits:
+
+* Auth endpoints: strict
+* Pickup creation: 10 per hour per user
+* Webhooks: HMAC validated but rate limited
+
+Redis-backed rate limiting required.
+
+---
+
+## 13. Error Codes
+
+Standardized error codes:
+
+* UNAUTHORIZED
+* FORBIDDEN
+* INVALID_INPUT
+* NOT_FOUND
+* OFFER_EXPIRED
+* DUPLICATE_REQUEST
+* INTERNAL_ERROR
+
+No raw database errors returned.
+
+---
+
+## 14. API Guardrails
+
+The API must:
+
+* Never expose service-role key
+* Never allow admin via env flag
+* Never allow unauthenticated vendor updates
+* Never allow state transitions out of order
+* Never delete financial records
+
+---
+
+## 15. Summary
+
+API layer is:
+
+* Stateless
+* Secure
+* Role-aware
+* Queue-integrated
+* Versioned
+* Idempotent
+* Horizontally scalable
+
+No polling-based design.
+No in-memory dispatch logic.
+All lifecycle changes logged.
+
+```
+```
