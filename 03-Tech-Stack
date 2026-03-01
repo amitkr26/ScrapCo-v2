@@ -1,3 +1,49 @@
+```markdown
+# ScrapCo V2 — Tech Stack Specification
+
+## 1. Technology Philosophy
+
+ScrapCo V2 must use:
+
+- Battle-tested technologies
+- Horizontally scalable components
+- Strong typing everywhere
+- Minimal vendor lock-in
+- Cloud-managed infrastructure
+- Clear separation between runtime responsibilities
+
+No experimental frameworks.
+No unstable beta dependencies.
+No unnecessary abstraction layers.
+
+---
+
+## 2. Monorepo & Package Management
+
+### Package Manager
+- pnpm (required)
+
+### Monorepo Tooling
+- Turborepo OR native pnpm workspaces
+- Shared TypeScript config
+- Shared ESLint config
+- Shared Prettier config
+
+### Directory Structure
+
+```
+
+scrapco/
+├── apps/
+│   ├── web/
+│   ├── mobile/
+│   ├── api/
+│   ├── worker/
+├── packages/
+│   ├── shared/
+│   ├── config/
+
+```
 
 ---
 
@@ -343,3 +389,4 @@ Monitoring:
 - Sentry + Structured Logs
 
 All components must follow strict typing, modular architecture, and event-driven principles.
+```
