@@ -1,0 +1,404 @@
+```markdown
+# ScrapCo V2 — Frontend Requirements (Web)
+
+## 1. Frontend Philosophy
+
+The web application is:
+
+- The SEO acquisition layer
+- The seller-facing dashboard
+- The vendor-facing dashboard (optional in Phase 1)
+- The admin control panel
+
+The web app must be:
+
+- Server-rendered by default
+- SEO-optimized
+- Minimal client-side JavaScript
+- Role-aware
+- Performance-focused
+- Lighthouse 90+ compliant
+
+No SPA-only architecture.
+No CSR-only design.
+No heavy animation bloat.
+No business logic in client.
+
+---
+
+## 2. Framework Requirements
+
+Framework:
+- Next.js (App Router)
+
+Rendering:
+- Server Components by default
+- Client Components only when necessary
+- SSR for dynamic pages
+- Static generation for city pages
+- Streaming where beneficial
+
+No legacy Pages Router.
+
+---
+
+## 3. Core Web Surfaces
+
+### 3.1 Marketing Site
+
+Pages:
+
+- Home
+- How It Works
+- Scrap Types & Rates
+- City Pages (Narnaul, Gorakhpur, Singhana)
+- About
+- Contact
+- FAQ
+- Terms & Privacy
+
+Must include:
+
+- Metadata API usage
+- Canonical URLs
+- Open Graph tags
+- Twitter meta
+- JSON-LD structured data
+- Sitemap generation
+- Robots.txt
+
+SEO is mandatory.
+
+---
+
+### 3.2 Seller Dashboard
+
+Features:
+
+- Create Pickup
+- View Pickup Status
+- Real-time status updates
+- Transaction history
+- Rating submission
+- Profile management
+
+Constraints:
+
+- Must use authenticated SSR where possible
+- Must not poll
+- Must subscribe to real-time updates
+- Must not expose internal DB fields
+
+---
+
+### 3.3 Vendor Dashboard
+
+Features:
+
+- View incoming offers
+- Accept/Reject offer
+- View assigned pickups
+- Update pickup status
+- Capacity overview
+- Earnings summary (Phase 2)
+
+Real-time updates mandatory.
+
+No polling.
+
+---
+
+### 3.4 Admin Dashboard
+
+Features:
+
+- Manage scrap types
+- Manage scrap rates
+- View region metrics
+- View pickup analytics
+- Commission configuration
+- Vendor management
+
+Must require ADMIN role.
+No env-based bypass.
+
+---
+
+## 4. Routing Structure
+
+Example App Router structure:
+
+```
+
+app/
+├── page.tsx
+├── city/
+│   ├── [slug]/
+│   │   └── page.tsx
+├── dashboard/
+│   ├── seller/
+│   ├── vendor/
+│   ├── admin/
+├── pickup/
+│   ├── [id]/
+│   │   └── page.tsx
+
+```
+
+Role-based access enforced in layout.
+
+---
+
+## 5. SEO Requirements
+
+Each public page must:
+
+- Define title
+- Define description
+- Define canonical URL
+- Define Open Graph metadata
+- Include JSON-LD schema
+
+Structured data:
+
+- LocalBusiness
+- Service
+- FAQ
+- Breadcrumb
+
+Sitemap must include:
+
+- All city pages
+- Scrap type pages
+- Static marketing pages
+
+No blank SSR pages.
+
+---
+
+## 6. Performance Requirements
+
+Targets:
+
+- Lighthouse Performance > 90
+- Accessibility > 90
+- SEO > 95
+- Best Practices > 95
+
+Constraints:
+
+- No unnecessary client components
+- No heavy animation libraries globally
+- No large icon bundles
+- Use dynamic imports for heavy components
+- Optimize images via next/image
+- No blocking scripts
+
+---
+
+## 7. State Management
+
+Use:
+
+- Server state first
+- SWR for client caching
+- Minimal Context usage
+- No Redux
+- No global provider re-render cascade
+
+Avoid:
+
+- Polling
+- setInterval
+- Massive global state trees
+
+---
+
+## 8. Authentication Handling
+
+Use:
+
+- Supabase Auth
+- JWT in HTTP-only cookie OR secure storage
+- Server-side session validation
+- Role-based routing guards
+
+No localStorage-based auth without validation.
+
+---
+
+## 9. UI/UX Standards
+
+Design must:
+
+- Be clean and minimal
+- Be responsive (mobile-first)
+- Support keyboard navigation
+- Support screen readers
+- Respect prefers-reduced-motion
+- Meet WCAG AA contrast
+
+No inaccessible components.
+
+---
+
+## 10. Form Handling
+
+Forms must:
+
+- Use Zod schema validation
+- Display inline validation errors
+- Prevent duplicate submissions
+- Support loading states
+- Support error states
+
+All errors must use standardized API error format.
+
+---
+
+## 11. Real-Time Integration
+
+Seller dashboard must:
+
+- Subscribe to pickup-specific events
+- Update UI instantly on status change
+
+Vendor dashboard must:
+
+- Subscribe to offer events
+- Reflect assignment instantly
+
+No polling allowed.
+
+---
+
+## 12. Security Constraints
+
+Frontend must:
+
+- Never expose service-role key
+- Never expose HMAC secret
+- Never embed sensitive environment variables
+- Never allow admin route without role check
+- Never trust client role claim
+
+All sensitive logic must be server-side.
+
+---
+
+## 13. Code Structure Requirements
+
+Use feature-based structure:
+
+```
+
+features/
+├── pickup/
+├── vendor/
+├── admin/
+├── auth/
+├── shared/
+
+```
+
+Shared components in:
+
+```
+
+components/
+
+```
+
+Shared utilities in:
+
+```
+
+lib/
+
+```
+
+No mixed folder chaos.
+
+---
+
+## 14. Error Handling
+
+Frontend must:
+
+- Use error boundaries
+- Display meaningful fallback UI
+- Log errors to monitoring service
+- Avoid crashing entire app on minor failure
+
+---
+
+## 15. Accessibility Requirements
+
+Must include:
+
+- aria-label on interactive elements
+- Focus trapping in modals
+- Keyboard navigable navigation
+- Skip-to-content link
+- Semantic HTML
+- Proper heading hierarchy
+
+Accessibility score must exceed 90.
+
+---
+
+## 16. Internationalization (Future-Ready)
+
+Architecture must allow:
+
+- Multi-language support
+- Region-based language expansion
+- Currency formatting per region
+
+Do not hardcode text strings inline in components.
+
+---
+
+## 17. Analytics Integration
+
+Must support:
+
+- Event tracking
+- Conversion tracking
+- Page-level metrics
+- Pickup creation funnel tracking
+
+Analytics must not block rendering.
+
+---
+
+## 18. Guardrails
+
+Web frontend must never:
+
+- Depend on client-side business logic
+- Poll backend for status
+- Render blank SSR pages
+- Use wildcard CORS
+- Store secrets in bundle
+- Depend on environment flag auth
+
+---
+
+## 19. Summary
+
+Web frontend must be:
+
+- SEO-first
+- Server-rendered
+- Role-aware
+- Real-time integrated
+- Secure
+- Accessible
+- Performant
+- Scalable
+
+It is both acquisition engine and marketplace interface.
+
+No compromises allowed.
+```
