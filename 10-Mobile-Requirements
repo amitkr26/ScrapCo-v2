@@ -1,0 +1,318 @@
+```markdown id="mobile-requirements-01"
+# ScrapCo V2 — Mobile Requirements (Expo)
+
+## 1. Mobile Philosophy
+
+The mobile app is:
+
+- Operational interface for sellers and vendors
+- Real-time interaction layer
+- Push-notification enabled client
+- Location-aware system
+- Lightweight, performant, and scalable
+
+Mobile is NOT:
+
+- SEO surface
+- Marketing site
+- Business logic authority
+
+All business logic remains server-side.
+
+---
+
+## 2. Platform Targets
+
+Supported platforms:
+
+- Android (Primary)
+- iOS
+- Web (optional minimal support)
+
+Android must be prioritized for early cities.
+
+---
+
+## 3. Core Roles
+
+Mobile must support:
+
+- SELLER
+- VENDOR
+
+ADMIN must remain web-only in Phase 1.
+
+---
+
+## 4. Core Seller Flows
+
+Seller must be able to:
+
+1. Register/Login
+2. Create pickup request
+3. View pickup status in real-time
+4. Receive push notifications
+5. View transaction history
+6. Submit rating
+7. Cancel pickup (before completion)
+
+No polling allowed.
+
+---
+
+## 5. Core Vendor Flows
+
+Vendor must be able to:
+
+1. Login
+2. Receive offer notification
+3. Accept / Reject offer
+4. View assigned pickups
+5. Mark pickup ON_THE_WAY
+6. Mark pickup COMPLETED
+7. View earnings summary (Phase 2)
+8. Update availability status
+
+Vendor must receive real-time updates.
+
+---
+
+## 6. Real-Time Integration
+
+Mobile must use:
+
+- Supabase Realtime OR
+- WebSocket client
+
+Polling via setInterval is prohibited.
+
+Client must:
+
+- Subscribe to user-scoped channels
+- Reconcile state on reconnect
+- Automatically reconnect if dropped
+
+---
+
+## 7. Push Notifications
+
+Push must trigger on:
+
+- New vendor offer
+- Offer expiring soon
+- Pickup assigned
+- Pickup started
+- Pickup completed
+- Transaction settled
+
+Push must:
+
+- Use Expo Notifications
+- Be token-registered securely
+- Not contain sensitive data
+- Deep link to relevant screen
+
+---
+
+## 8. Location Handling
+
+Location must:
+
+- Request permission only when needed
+- Not request on app startup unnecessarily
+- Not block UI if denied
+- Support background updates for vendor (optional Phase 2)
+
+Vendor location updates must:
+
+- Be authenticated
+- Not be publicly writable
+- Be rate-limited
+
+---
+
+## 9. State Management
+
+Use:
+
+- Modular feature-based context
+- React Query (optional for data caching)
+- Minimal global providers
+
+Avoid:
+
+- Single global provider wrapping entire app
+- Unnecessary re-render cascades
+- Polling-based state updates
+
+---
+
+## 10. Security Requirements
+
+Mobile must:
+
+- Store tokens in SecureStore
+- Never hardcode API keys
+- Never hardcode Google Maps key
+- Validate API base URL at startup
+- Disable dev bypass in production build
+
+Sensitive configuration must use:
+
+```
+
+EXPO_PUBLIC_API_URL
+
+```id="g1zbrm"
+
+No fallback to localhost in production.
+
+---
+
+## 11. Performance Requirements
+
+App must:
+
+- Avoid heavy libraries unless required
+- Lazy-load heavy screens
+- Avoid unnecessary re-renders
+- Debounce rapid state updates
+- Avoid blocking UI thread
+
+Target:
+
+- Smooth performance on low-end Android devices
+
+---
+
+## 12. Navigation Architecture
+
+Use:
+
+- React Navigation
+- Separate stacks per role
+- Auth gate at root
+
+Example structure:
+
+```
+
+navigation/
+├── AuthStack
+├── SellerStack
+├── VendorStack
+
+```id="u9fh0x"
+
+Role-based routing required.
+
+---
+
+## 13. API Client Requirements
+
+Mobile must use:
+
+- Centralized API client
+- Typed responses
+- Standard error handling
+- Automatic JWT injection
+- Graceful retry logic
+
+No raw fetch scattered across components.
+
+---
+
+## 14. Error Handling
+
+Mobile must:
+
+- Display meaningful errors
+- Support retry
+- Avoid crashing entire app
+- Log errors to monitoring service
+- Handle offline mode gracefully
+
+---
+
+## 15. Offline Strategy (Basic)
+
+In Phase 1:
+
+- Allow viewing last-known state
+- Prevent critical actions offline
+- Show offline banner
+
+No complex offline queue required initially.
+
+---
+
+## 16. Accessibility
+
+Mobile must:
+
+- Use accessibilityLabel
+- Support screen readers
+- Support larger text
+- Avoid animation overload
+- Respect reduced motion
+
+---
+
+## 17. Build & Environment Rules
+
+Production build must:
+
+- Strip console logs
+- Disable dev flags
+- Validate environment variables
+- Use correct API endpoint
+- Use restricted Google Maps key (if used)
+
+No debug configuration allowed in production.
+
+---
+
+## 18. Analytics
+
+Mobile must support:
+
+- Pickup creation event tracking
+- Offer acceptance tracking
+- Session tracking
+- Error tracking
+
+Analytics must not block UI thread.
+
+---
+
+## 19. Guardrails
+
+Mobile must never:
+
+- Poll for status
+- Store sensitive secrets
+- Allow admin role access
+- Use env toggle auth
+- Accept unsigned webhook
+- Assume dispatch state locally
+
+Mobile is a real-time client, not business authority.
+
+---
+
+## 20. Summary
+
+ScrapCo Mobile must be:
+
+- Real-time
+- Push-enabled
+- Secure
+- Role-aware
+- Location-capable
+- Performant
+- Offline-tolerant (basic)
+- Scalable
+- Cleanly structured
+
+It is the operational interface of the marketplace.
+```
