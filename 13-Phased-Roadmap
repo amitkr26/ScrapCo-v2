@@ -1,0 +1,349 @@
+```markdown
+# ScrapCo V2 — Phased Roadmap
+
+## 1. Roadmap Philosophy
+
+ScrapCo V2 must be built in controlled, production-safe phases.
+
+Rules:
+
+- Do not build everything at once.
+- Core dispatch stability first.
+- Marketplace mechanics second.
+- Financial complexity later.
+- Scale only after stability.
+- Never compromise architecture for speed.
+
+Each phase must be deployable and usable independently.
+
+---
+
+## 2. Phase 0 — Foundation (Architecture Freeze)
+
+Objective:
+Lock architecture, schema, and infrastructure before feature expansion.
+
+Deliverables:
+
+- Monorepo setup (web, mobile, api, worker)
+- Environment validation system
+- Database schema implemented
+- Redis + BullMQ configured
+- CI pipeline functional
+- Health endpoints implemented
+- Logging & error tracking integrated
+- Role-based auth middleware implemented
+- Rate limiting + Helmet + CORS configured
+
+Exit Criteria:
+
+- API deployable
+- Worker deployable
+- No in-memory dispatch
+- No env-toggle admin
+- Health checks passing
+- CI passing
+
+No marketplace logic yet.
+
+---
+
+## 3. Phase 1 — Core Marketplace (Sequential Model)
+
+Objective:
+Stable dispatch with sequential vendor offer model.
+
+Deliverables:
+
+- Seller pickup creation
+- Dispatch job queue
+- Vendor selection logic
+- Offer creation + expiry
+- Vendor accept/reject
+- Assignment creation
+- Pickup lifecycle transitions
+- Audit logging
+- Real-time updates (no polling)
+- Seller dashboard (basic)
+- Vendor dashboard (basic)
+- Admin scrap type + scrap rate management
+
+Operational Constraints:
+
+- Single region tested first
+- Commission stored per transaction
+- Basic transaction record creation
+- Rating submission
+
+Exit Criteria:
+
+- Assignment success rate measurable
+- Assignment time < 5 minutes (P95)
+- No duplicate assignments
+- No lost dispatch jobs
+- No critical security gaps
+- System stable in 3 cities
+
+This phase makes ScrapCo operational.
+
+---
+
+## 4. Phase 2 — Marketplace Enhancement
+
+Objective:
+Introduce vendor competition and operational intelligence.
+
+Deliverables:
+
+- Parallel vendor offer support
+- First-accept wins model
+- Vendor capacity tracking
+- Vendor availability toggle
+- Vendor acceptance rate metrics
+- Commission configuration per region
+- Basic vendor earnings dashboard
+- Queue performance tuning
+- Admin region-level analytics
+- Rate limiting optimization
+- Performance optimizations (index tuning)
+
+Optional Additions:
+
+- Wallet table implementation
+- Vendor performance ranking refinement
+
+Exit Criteria:
+
+- Vendor competition functional
+- Capacity-aware dispatch
+- Real-time reliability under load
+- Dispatch success rate improved
+- Worker horizontally scalable
+
+This phase strengthens marketplace dynamics.
+
+---
+
+## 5. Phase 3 — Financial Layer
+
+Objective:
+Introduce structured financial management.
+
+Deliverables:
+
+- Wallet system activated
+- Commission settlement tracking
+- Transaction adjustment system
+- Refund handling support
+- Payment gateway integration (optional)
+- Earnings statement export
+- Commission reporting per region
+- Fraud flagging logic
+
+Constraints:
+
+- No deletion of financial records
+- Immutable transaction logs
+- Commission configurable without code change
+
+Exit Criteria:
+
+- Financial records auditable
+- Wallet balances accurate
+- Revenue dashboard operational
+- Commission revenue measurable
+
+This phase enables monetization scale.
+
+---
+
+## 6. Phase 4 — Operational Scaling
+
+Objective:
+Prepare for 10+ cities expansion.
+
+Deliverables:
+
+- Region onboarding tooling
+- Vendor onboarding automation
+- Vendor verification workflow
+- Region-level SLA tracking
+- Queue scaling improvements
+- Redis performance tuning
+- DB performance tuning
+- Deployment auto-scaling
+- Production monitoring alerts refined
+
+Operational Requirements:
+
+- Region addition requires no code change
+- Scaling does not break dispatch
+- Horizontal API scaling tested
+
+Exit Criteria:
+
+- Multi-city performance stable
+- Dispatch resilient to high concurrency
+- Monitoring actionable
+
+This phase prepares national scaling.
+
+---
+
+## 7. Phase 5 — Advanced Marketplace Evolution
+
+Objective:
+Build network-level advantages.
+
+Deliverables:
+
+- Recycler integration
+- Multi-tier marketplace logic
+- Dynamic pricing engine
+- Smart vendor ranking algorithm
+- AI-based dispatch optimization
+- Analytics dashboard for growth
+- Demand-supply heatmap
+- SLA optimization tools
+
+Optional:
+
+- Subscription-based vendor tiers
+- Featured placement model
+- Premium seller services
+
+This phase transforms ScrapCo into infrastructure.
+
+---
+
+## 8. What NOT to Build Early
+
+Avoid in early phases:
+
+- Full wallet microservice
+- Microservices architecture
+- AI pricing engine
+- Heavy analytics dashboards
+- Blockchain-based ideas
+- Chat systems
+- Complex social features
+
+Focus on:
+
+- Stable dispatch
+- Secure system
+- Reliable real-time
+- Measurable performance
+
+---
+
+## 9. Phase Prioritization Strategy
+
+Build Order:
+
+1. Backend Core + Dispatch Engine
+2. Web Seller Dashboard
+3. Vendor Dashboard
+4. Real-time System
+5. Security Hardening
+6. Observability
+7. Competition Model
+8. Financial Layer
+
+Never reverse this order.
+
+---
+
+## 10. Technical Debt Policy
+
+If during any phase:
+
+- Dispatch becomes unstable
+- Security gap discovered
+- Real-time unreliable
+- Assignment logic inconsistent
+
+Stop feature development.
+Fix core system first.
+
+---
+
+## 11. Scaling Strategy Timeline
+
+City Expansion Plan:
+
+Phase 1:
+- Narnaul
+
+Phase 2:
+- Gorakhpur
+- Singhana
+
+Phase 3:
+- 5 additional cities
+
+Phase 4:
+- 10+ cities
+
+Each expansion must:
+
+- Measure dispatch metrics
+- Validate vendor density
+- Validate acceptance rate
+
+No blind expansion.
+
+---
+
+## 12. Success Milestones
+
+Phase 1 Success:
+
+- Stable operations in 3 cities
+- Vendor acceptance > 60%
+- Assignment time < 5 minutes
+
+Phase 2 Success:
+
+- Vendor competition functional
+- Capacity-aware dispatch
+
+Phase 3 Success:
+
+- Commission revenue predictable
+- Wallet reconciliation accurate
+
+Phase 4 Success:
+
+- Horizontal scaling proven
+- Multi-city operations stable
+
+---
+
+## 13. Long-Term Objective
+
+ScrapCo must evolve into:
+
+- Structured scrap marketplace infrastructure
+- Region-scalable logistics network
+- Commission-based revenue engine
+- Data-driven optimization platform
+
+Roadmap ensures this happens without architectural rewrite.
+
+---
+
+## 14. Summary
+
+ScrapCo V2 roadmap ensures:
+
+- Stability before scale
+- Architecture before features
+- Security before expansion
+- Observability before automation
+- Marketplace mechanics before financial complexity
+
+No shortcuts.
+
+Each phase builds on stable foundation.
+```
