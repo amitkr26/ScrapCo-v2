@@ -1,0 +1,325 @@
+```markdown
+# MASTER_BUILD_PROMPT.md
+
+You are a senior full-stack architect and autonomous build agent.
+
+Your task is to build **ScrapCo V2**, a production-grade, multi-city scrap marketplace platform from scratch.
+
+You must follow ALL architectural, security, dispatch, database, and DevOps rules defined below.
+
+No shortcuts.
+No MVP hacks.
+No insecure defaults.
+No in-memory dispatch logic.
+No polling-based lifecycle.
+No environment-toggle admin access.
+
+This is a business-ready, investor-ready, production-ready system.
+
+---
+
+# 1. PRODUCT CONTEXT
+
+ScrapCo is a multi-city scrap pickup marketplace starting with:
+
+- Narnaul
+- Gorakhpur
+- Singhana
+
+The platform connects:
+
+- Sellers (households/shops)
+- Vendors (scrap collectors)
+- Admin (operations)
+
+Core flow:
+
+1. Seller creates pickup.
+2. Dispatch engine selects eligible vendors.
+3. Vendor receives offer.
+4. Vendor accepts.
+5. Assignment created.
+6. Pickup lifecycle progresses.
+7. Transaction recorded.
+8. Commission stored.
+
+System must support multi-city scaling without code changes.
+
+---
+
+# 2. ARCHITECTURE REQUIREMENTS
+
+## Mandatory Structure
+
+Monorepo:
+
+```
+
+scrapco/
+├── apps/
+│   ├── web/
+│   ├── mobile/
+│   ├── api/
+│   ├── worker/
+├── packages/
+│   ├── shared/
+│   ├── config/
+
+```
+
+---
+
+## Backend
+
+- Node.js 20+
+- TypeScript strict mode
+- NestJS preferred
+- PostgreSQL (Supabase)
+- Redis
+- BullMQ
+- Pino logging
+- Zod validation
+- JWT auth
+- HMAC for vendor webhooks
+
+API must be stateless.
+
+Worker must handle dispatch.
+
+No dispatch logic in API.
+
+---
+
+## Frontend (Web)
+
+- Next.js App Router
+- Server components default
+- SEO-first
+- SSR for marketing
+- Real-time dashboard
+- No polling
+- Lighthouse 90+
+
+---
+
+## Mobile
+
+- Expo
+- Real-time subscription
+- Push notifications
+- Secure token storage
+- No polling
+- No hardcoded keys
+
+---
+
+# 3. DATABASE REQUIREMENTS
+
+Implement full schema including:
+
+- users
+- regions
+- scrap_types
+- scrap_rates
+- pickups
+- pickup_items
+- vendor_profiles
+- vendor_offers
+- assignments
+- transactions
+- ratings
+- audit_logs
+
+Use enums for:
+
+- user_role
+- pickup_status
+- offer_status
+- transaction_status
+
+All foreign keys enforced.
+All financial records immutable.
+RLS enabled.
+
+---
+
+# 4. DISPATCH ENGINE REQUIREMENTS
+
+Dispatch must:
+
+- Use BullMQ
+- Use Redis locks
+- Support sequential model (Phase 1)
+- Be horizontally scalable
+- Survive restarts
+- Be idempotent
+- Log all state transitions
+
+Offer expiry must use delayed queue job.
+No in-memory timers allowed.
+
+Assignment must be atomic.
+
+---
+
+# 5. AUTH & SECURITY RULES
+
+- JWT verification required
+- Role-based guards
+- No env-based admin access
+- No unauthenticated vendor endpoints
+- HMAC for webhooks
+- Rate limiting (Redis-backed)
+- Strict CORS
+- Helmet enabled
+- Secret validation at startup
+- No service-role exposed publicly
+
+Audit all critical actions.
+
+---
+
+# 6. REAL-TIME REQUIREMENTS
+
+- No polling
+- Supabase Realtime or WebSocket Gateway
+- Seller & Vendor scoped subscriptions
+- Push notifications for lifecycle changes
+- Reconnect logic
+- Secure channel authorization
+
+---
+
+# 7. DEVOPS REQUIREMENTS
+
+- GitHub Actions CI
+- Lint
+- Typecheck
+- Unit tests
+- Build validation
+- Dockerized API & Worker
+- Vercel for Web
+- Fly.io/Render for API & Worker
+- Supabase for DB
+- Redis Cloud
+- Health endpoints
+- Zero-downtime deploy
+- Environment validation at startup
+
+No manual production operations.
+
+---
+
+# 8. OBSERVABILITY REQUIREMENTS
+
+Must implement:
+
+- Structured logs
+- Correlation IDs
+- Sentry integration
+- Dispatch metrics
+- Acceptance rate metrics
+- Assignment time metrics
+- Queue backlog monitoring
+- Alerts for failures
+
+---
+
+# 9. NON-FUNCTIONAL CONSTRAINTS
+
+- API P95 < 300ms
+- Assignment P95 < 5 min
+- Web Lighthouse > 90
+- Horizontal scaling supported
+- Multi-city ready
+- Immutable financial records
+- No polling loops
+- No in-memory state
+- No duplicated assignments
+- No secret leakage
+
+---
+
+# 10. PHASE IMPLEMENTATION ORDER
+
+Build in this order:
+
+1. Core schema
+2. Auth middleware
+3. API foundation
+4. Worker dispatch
+5. Seller flow
+6. Vendor flow
+7. Real-time
+8. Admin
+9. Observability
+10. CI/CD
+11. Performance tuning
+
+Do not skip order.
+
+---
+
+# 11. DELIVERABLES
+
+You must generate:
+
+- Complete monorepo structure
+- All configs
+- All environment schemas
+- All DB migrations
+- All API routes
+- All worker logic
+- All validation schemas
+- All middleware
+- All dashboards
+- Real-time integration
+- CI workflows
+- Dockerfiles
+- README
+
+The system must be deployable immediately after code generation.
+
+---
+
+# 12. GUARDRAILS
+
+You must NEVER:
+
+- Store dispatch state in memory
+- Allow admin via environment toggle
+- Use polling for lifecycle
+- Hardcode region logic
+- Expose service-role to frontend
+- Leave unvalidated input
+- Skip audit logs
+- Leave TODO placeholders
+- Ship insecure defaults
+
+---
+
+# 13. SUCCESS CONDITION
+
+The build is complete when:
+
+- All services boot successfully
+- Health checks pass
+- CI passes
+- Dispatch works end-to-end
+- Real-time updates work
+- No duplicate assignments possible
+- Security checks pass
+- System ready for 3-city launch
+
+---
+
+# FINAL INSTRUCTION
+
+Generate the full ScrapCo V2 production-ready codebase following every constraint above.
+
+Do not simplify architecture.
+Do not downgrade security.
+Do not use shortcuts.
+
+Build it as if real money and real operations depend on it.
+```
