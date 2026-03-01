@@ -1,0 +1,415 @@
+````markdown id="auth-security-model-01"
+# ScrapCo V2 — Authentication & Security Model
+
+## 1. Security Philosophy
+
+Security is not optional.
+
+Rules:
+
+- No environment flag-based authorization.
+- No unauthenticated write endpoints.
+- No service-role usage in public request handlers.
+- All state transitions validated.
+- All inputs schema-validated.
+- All secrets environment-controlled.
+- All sensitive operations auditable.
+
+System must be secure by default.
+
+---
+
+## 2. Authentication Model
+
+Primary Authentication Provider:
+- Supabase Auth (JWT-based)
+
+All protected endpoints require:
+
+```http
+Authorization: Bearer <JWT>
+````
+
+JWT must be:
+
+* Verified
+* Decoded
+* Validated for expiration
+* Matched against role in database
+
+No client-trusted role values allowed.
+
+---
+
+## 3. Role-Based Access Control (RBAC)
+
+Supported roles:
+
+* SELLER
+* VENDOR
+* ADMIN
+
+Role must be stored in database (`users.role`).
+
+Middleware must:
+
+1. Verify JWT
+2. Fetch user from DB
+3. Attach role to request context
+4. Enforce route-level guard
+
+---
+
+### 3.1 Seller Permissions
+
+Allowed:
+
+* Create pickup
+* View own pickups
+* Cancel own pickups
+* View own transactions
+* Submit rating
+
+Forbidden:
+
+* View other users’ pickups
+* Access vendor routes
+* Access admin routes
+
+---
+
+### 3.2 Vendor Permissions
+
+Allowed:
+
+* View assigned pickups
+* Accept/reject offers
+* Update location
+* Mark pickup started
+* Mark pickup completed
+
+Forbidden:
+
+* Access admin routes
+* Access other vendor assignments
+* Create scrap rates
+
+---
+
+### 3.3 Admin Permissions
+
+Allowed:
+
+* Manage scrap types
+* Manage scrap rates
+* View region metrics
+* View all pickups
+* Adjust commission settings
+
+Admin routes must:
+
+* Require ADMIN role
+* Never rely on environment flags
+
+---
+
+## 4. Vendor Webhook Security
+
+Vendor external systems must authenticate via:
+
+* HMAC signature
+
+Header:
+
+```http
+x-scrapco-signature: <signature>
+```
+
+Verification process:
+
+1. Retrieve raw request body
+2. Generate HMAC using shared secret
+3. Compare signature
+4. Reject if mismatch
+
+HMAC secret must be:
+
+* Environment variable
+* Rotatable
+* Never logged
+
+---
+
+## 5. JWT Verification Strategy
+
+JWT validation must include:
+
+* Signature verification
+* Expiry check
+* Issuer validation
+* Audience validation
+
+JWT alone does not determine role.
+Role must be verified against DB.
+
+---
+
+## 6. Rate Limiting
+
+Rate limiting required on:
+
+* Login endpoints
+* Pickup creation
+* Offer acceptance
+* Webhooks
+
+Rate limiting must:
+
+* Use Redis backend
+* Be IP-based and user-based
+* Return standardized error
+
+Example:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests"
+  }
+}
+```
+
+---
+
+## 7. CORS Policy
+
+CORS must:
+
+* Allow only known origins
+* Disallow wildcard origin
+* Restrict allowed methods
+* Restrict headers
+
+Example allowed origins:
+
+* [https://scrapco.app](https://scrapco.app)
+* [https://admin.scrapco.app](https://admin.scrapco.app)
+
+No `*` allowed in production.
+
+---
+
+## 8. Input Validation
+
+All request bodies must:
+
+* Be validated via Zod
+* Reject unknown properties
+* Enforce strict typing
+* Enforce numeric ranges
+
+Never trust client-side validation.
+
+---
+
+## 9. Data Protection
+
+Sensitive data:
+
+* JWT tokens
+* HMAC secrets
+* Service-role key
+* Redis URL
+* Database URL
+
+Must:
+
+* Never be logged
+* Never be committed to repo
+* Never be exposed in frontend bundle
+
+Environment variables must be validated at startup.
+
+---
+
+## 10. Service Role Usage
+
+Service-role key must:
+
+* Only be used in Worker service
+* Not used in public API request context
+* Not be accessible via frontend
+
+Public API should use:
+
+* Supabase anon client
+* With Row-Level Security enforced
+
+---
+
+## 11. Row Level Security (RLS)
+
+RLS policies required:
+
+* Seller can only access own pickups
+* Vendor can only access assigned pickups
+* Admin can access all
+* Worker bypasses RLS via service-role
+
+No public SELECT access.
+
+---
+
+## 12. Audit Logging
+
+All critical operations must create audit log:
+
+* Pickup created
+* Offer sent
+* Offer accepted
+* Offer rejected
+* Pickup completed
+* Transaction created
+* Admin changes scrap rate
+* Commission adjustments
+
+Audit log must include:
+
+* entity
+* entity_id
+* action
+* actor_id
+* timestamp
+
+No silent state changes.
+
+---
+
+## 13. Idempotency
+
+All mutating endpoints must support:
+
+```http
+Idempotency-Key: uuid
+```
+
+Server must:
+
+* Store key temporarily
+* Reject duplicate execution
+* Return previous result if repeated
+
+---
+
+## 14. Data Integrity Rules
+
+Security checks must prevent:
+
+* Offer acceptance after expiry
+* Double assignment
+* Vendor from accepting other vendor’s offer
+* Seller cancelling completed pickup
+* Transaction creation without assignment
+
+All enforced via:
+
+* DB constraints
+* Transaction blocks
+* Explicit validation
+
+---
+
+## 15. CSRF Protection
+
+If cookies used in future:
+
+* CSRF token required
+
+Current architecture uses JWT Bearer, so CSRF risk minimal but must remain aware.
+
+---
+
+## 16. File Upload Security (Future Ready)
+
+If adding uploads:
+
+* Validate file type
+* Enforce size limits
+* Use signed URLs
+* No direct file storage in API server
+
+---
+
+## 17. Secret Management
+
+Secrets must be:
+
+* Managed via deployment provider
+* Rotatable
+* Separate for staging and production
+* Never hardcoded
+
+No fallback to localhost defaults in production.
+
+---
+
+## 18. Logging Security
+
+Logs must:
+
+* Never log passwords
+* Never log JWT
+* Never log service-role key
+* Never log HMAC secret
+
+Structured logging only.
+
+---
+
+## 19. Security Monitoring
+
+Must integrate:
+
+* Sentry
+* Alerting for:
+
+  * Repeated failed auth
+  * High webhook failures
+  * Rate limit spikes
+  * Dispatch anomaly rate
+
+---
+
+## 20. Guardrails
+
+System must never:
+
+* Use env toggle for admin access
+* Allow public vendor location update
+* Allow unverified webhook
+* Allow service-role exposed to client
+* Store sensitive data in frontend bundle
+* Allow unauthenticated state change
+
+---
+
+## 21. Security Summary
+
+ScrapCo V2 must be:
+
+* Role-controlled
+* JWT-secured
+* HMAC-validated
+* Rate-limited
+* CORS-restricted
+* Audited
+* Secret-protected
+
+Security posture must exceed MVP level.
+
+No shortcuts allowed.
+
+```
+```
