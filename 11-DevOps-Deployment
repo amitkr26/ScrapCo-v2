@@ -1,0 +1,399 @@
+````markdown id="devops-deployment-01"
+# ScrapCo V2 — DevOps & Deployment Specification
+
+## 1. DevOps Philosophy
+
+Deployment must be:
+
+- Automated
+- Reproducible
+- Environment-isolated
+- Version-controlled
+- Zero-manual-steps
+- Safe for rollback
+
+No manual SSH deployments.
+No manual DB schema edits.
+No hidden environment flags.
+
+Everything must be CI/CD driven.
+
+---
+
+## 2. Environment Strategy
+
+Three environments mandatory:
+
+- Development
+- Staging
+- Production
+
+Each environment must have:
+
+- Separate database
+- Separate Redis
+- Separate API endpoint
+- Separate mobile config
+- Separate secrets
+
+No shared production secrets in staging.
+
+---
+
+## 3. Infrastructure Providers
+
+### Web
+- Vercel
+
+### API
+- Fly.io OR Render
+
+### Worker
+- Fly.io OR Render (separate service)
+
+### Database
+- Supabase (Postgres)
+
+### Redis
+- Redis Cloud / Upstash
+
+### Monitoring
+- Sentry
+
+---
+
+## 4. Monorepo CI/CD Structure
+
+GitHub Actions must include:
+
+### Required Jobs
+
+1. Lint
+2. Type check
+3. Unit tests
+4. Build web
+5. Build API
+6. Build worker
+7. Migration validation
+8. Deployment (if main branch)
+
+---
+
+## 5. Example CI Workflow
+
+```yaml id="z5csam"
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+      - run: pnpm install
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm build
+````
+
+---
+
+## 6. Deployment Strategy
+
+### Web Deployment
+
+* Auto-deploy via Vercel
+* Preview deployments for PR
+* Production deployment on main merge
+
+Environment variables managed in Vercel dashboard.
+
+---
+
+### API Deployment
+
+* Docker-based deployment
+* Separate service for API
+* Health check endpoint required
+
+Dockerfile example:
+
+```dockerfile id="tn5byx"
+FROM node:20-alpine
+
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm build
+
+CMD ["node", "dist/main.js"]
+```
+
+---
+
+### Worker Deployment
+
+* Separate container
+* Same codebase
+* Different entrypoint
+
+Worker must scale independently from API.
+
+---
+
+## 7. Environment Validation
+
+On application startup:
+
+* Validate all required environment variables
+* Use Zod schema for validation
+* Fail startup if missing or malformed
+
+Example required variables:
+
+API:
+
+* DATABASE_URL
+* SUPABASE_URL
+* SUPABASE_ANON_KEY
+* SUPABASE_SERVICE_ROLE_KEY
+* REDIS_URL
+* HMAC_SECRET
+* NODE_ENV
+
+Web:
+
+* NEXT_PUBLIC_API_URL
+
+Mobile:
+
+* EXPO_PUBLIC_API_URL
+
+---
+
+## 8. Health Checks
+
+Each service must expose:
+
+````
+GET /health
+``` id="8ye4k0"
+
+Response must include:
+
+- Status
+- DB connectivity
+- Redis connectivity
+
+Deployment platform must use health check for restart strategy.
+
+---
+
+## 9. Database Migration Strategy
+
+Migrations must:
+
+- Be versioned
+- Live in repository
+- Run automatically during deploy
+- Be idempotent
+- Never run manually in production
+
+Preferred tools:
+
+- Drizzle migrations
+- Supabase CLI
+
+No production schema drift allowed.
+
+---
+
+## 10. Secret Management
+
+Secrets must:
+
+- Be stored in deployment provider
+- Never be committed
+- Never logged
+- Be rotated periodically
+
+Sensitive keys:
+
+- Service role key
+- JWT secret
+- HMAC secret
+- Redis credentials
+
+---
+
+## 11. Logging Strategy
+
+API and Worker must:
+
+- Use structured logging (Pino)
+- Log correlation ID per request
+- Log errors with stack trace
+- Not log sensitive data
+
+Logs must be:
+
+- Exportable
+- Centralized
+- Searchable
+
+---
+
+## 12. Rollback Strategy
+
+Rollback must support:
+
+- Revert to previous container image
+- Revert database migration if safe
+- Disable new feature flags if required
+
+No manual database rollback without migration tool.
+
+---
+
+## 13. Zero-Downtime Deployment
+
+Deploy strategy must:
+
+- Avoid breaking active dispatch jobs
+- Allow worker restart without losing queue
+- Keep API stateless
+- Ensure DB backward compatibility during rollout
+
+Deploy order:
+
+1. Deploy DB migration (backward compatible)
+2. Deploy API
+3. Deploy Worker
+4. Deploy Web
+
+---
+
+## 14. Monitoring & Alerting
+
+Must configure alerts for:
+
+- High error rate
+- Dispatch failure spike
+- Offer timeout spike
+- Redis connection failure
+- DB connection failure
+- Worker crash loops
+
+Alerts must notify:
+
+- Email
+- Slack (optional)
+
+---
+
+## 15. Backup Strategy
+
+Database backups:
+
+- Managed by Supabase
+- Daily automated backup
+- Retention policy defined
+
+Redis:
+
+- Snapshot enabled (if supported)
+
+Backups must be tested.
+
+---
+
+## 16. Scaling Strategy
+
+API:
+- Auto-scale based on CPU or request load
+
+Worker:
+- Scale based on queue backlog
+
+Redis:
+- Managed cluster if needed
+
+Database:
+- Upgrade plan defined before saturation
+
+---
+
+## 17. Deployment Guardrails
+
+Deployment must never:
+
+- Use default dev environment values in production
+- Deploy without passing CI
+- Allow admin via env flag
+- Skip migration validation
+- Deploy without health check configured
+
+---
+
+## 18. Infrastructure as Code (Optional Phase 2)
+
+Future improvement:
+
+- Terraform for infrastructure
+- Automated Redis provisioning
+- Automated Supabase config
+
+Not required in Phase 1.
+
+---
+
+## 19. Performance Monitoring
+
+Deployment must allow:
+
+- API response time monitoring
+- Worker job processing metrics
+- Real-time connection metrics
+- Region-based performance tracking
+
+---
+
+## 20. Summary
+
+ScrapCo V2 DevOps must be:
+
+- Automated
+- Secure
+- Versioned
+- Zero-downtime
+- Environment-isolated
+- Monitored
+- Rollback-capable
+- Scalable
+
+No manual production operations allowed.
+````
