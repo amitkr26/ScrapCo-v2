@@ -1,0 +1,372 @@
+```markdown id="dispatch-engine-01"
+# ScrapCo V2 — Dispatch Engine Specification
+
+## 1. Dispatch Philosophy
+
+Dispatch is the core of the marketplace.
+
+Rules:
+
+- No in-memory timers.
+- No sequential blocking logic in API layer.
+- No dispatch state stored outside database + Redis.
+- Must survive restarts.
+- Must scale horizontally.
+- Must be idempotent.
+
+Dispatch must be implemented using:
+
+- Redis
+- BullMQ
+- Dedicated Worker Service
+
+API layer must only enqueue jobs.
+
+---
+
+## 2. Dispatch Flow Overview
+
+High-Level Flow:
+
+1. PickupCreated
+2. Dispatch job enqueued
+3. Worker selects eligible vendors
+4. Offer created
+5. Vendor notified
+6. Expiry job scheduled
+7. Vendor responds OR expires
+8. If accepted → assignment created
+9. If rejected/expired → next vendor
+10. If none left → UNASSIGNED
+
+All transitions logged in `audit_logs`.
+
+---
+
+## 3. Dispatch States
+
+Pickup Status:
+
+- PENDING
+- OFFER_SENT
+- ASSIGNED
+- ON_THE_WAY
+- COMPLETED
+- CANCELLED
+- UNASSIGNED
+- EXPIRED
+
+Offer Status:
+
+- PENDING
+- ACCEPTED
+- REJECTED
+- EXPIRED
+
+---
+
+## 4. Redis Queue Structure
+
+Queues:
+
+```
+
+dispatch-queue
+offer-expiry-queue
+notification-queue
+
+```id="37mfiw"
+
+Redis is used for:
+
+- Job scheduling
+- Delayed expiry
+- Distributed locking
+
+No authoritative data stored permanently in Redis.
+
+---
+
+## 5. Dispatch Job Definition
+
+Job Name:
+
+```
+
+dispatch-pickup
+
+````id="6xocpy"
+
+Payload:
+
+```json
+{
+  "pickupId": "uuid"
+}
+````
+
+---
+
+## 6. Vendor Selection Logic
+
+Vendor eligibility criteria:
+
+* Same region as pickup
+* Active vendor
+* Capacity not exceeded
+* Not previously rejected this pickup
+* High rating prioritized
+* Lower response time preferred
+
+Query must:
+
+* Use indexed columns
+* Avoid full table scan
+* Limit candidate set
+
+Vendor selection order:
+
+1. Highest rating
+2. Lowest current active assignments
+3. Best historical acceptance rate
+4. Random tie-breaker
+
+---
+
+## 7. Offer Creation Logic
+
+When a vendor is selected:
+
+1. Create record in `vendor_offers`
+2. Update pickup status → OFFER_SENT
+3. Emit VendorOfferSent event
+4. Schedule delayed expiry job
+
+Expiry time:
+
+* Configurable (default: 2 minutes)
+
+---
+
+## 8. Offer Expiry Logic
+
+Delayed job in `offer-expiry-queue`.
+
+When triggered:
+
+1. Check if offer already accepted
+2. If accepted → do nothing
+3. If still PENDING → mark EXPIRED
+4. Emit OfferExpired event
+5. Enqueue dispatch job again
+
+Must be idempotent.
+
+---
+
+## 9. Offer Acceptance Flow
+
+When vendor accepts:
+
+1. Validate offer belongs to vendor
+2. Validate not expired
+3. Validate pickup not already assigned
+4. Mark offer ACCEPTED
+5. Create assignment record
+6. Update pickup → ASSIGNED
+7. Emit VendorOfferAccepted event
+8. Cancel pending expiry job (if exists)
+
+Must use transaction to ensure atomicity.
+
+---
+
+## 10. Offer Rejection Flow
+
+When vendor rejects:
+
+1. Mark offer REJECTED
+2. Log rejection
+3. Enqueue dispatch job for next vendor
+
+Must not allow duplicate rejection events.
+
+---
+
+## 11. Assignment Integrity Rules
+
+* Only one assignment per pickup.
+* No reassignment once COMPLETED.
+* Cancellation allowed only before COMPLETED.
+* Assignment must match region.
+
+Enforce at DB level where possible.
+
+---
+
+## 12. Idempotency Strategy
+
+Every dispatch job must:
+
+* Check pickup current status
+* Exit if already ASSIGNED or COMPLETED
+* Avoid duplicate offers
+
+Use:
+
+* DB transaction
+* Redis locking
+* Idempotency keys
+
+---
+
+## 13. Concurrency Control
+
+To avoid race conditions:
+
+Use Redis lock per pickup:
+
+````
+lock:pickup:<pickupId>
+``` id="7fbzex"
+
+Before processing dispatch:
+- Acquire lock
+- Release after job completion
+
+If lock exists:
+- Skip job
+
+---
+
+## 14. Parallel Scaling Strategy
+
+Worker instances can scale horizontally.
+
+Redis ensures:
+- Single job processing
+- No duplicate expiry triggers
+
+No shared memory between workers.
+
+---
+
+## 15. Failure Handling
+
+If worker crashes:
+
+- Redis retains job
+- Job retried
+
+If DB fails:
+
+- Job fails safely
+- No partial state committed
+
+If vendor endpoint fails:
+
+- Mark offer attempt
+- Continue to next vendor
+
+No silent failures.
+
+---
+
+## 16. Notification Hooks
+
+Dispatch must trigger notification events:
+
+- OfferSent → Notify vendor
+- AssignmentCreated → Notify seller
+- PickupStarted → Notify seller
+- PickupCompleted → Notify seller
+
+Notification system must be decoupled via queue.
+
+---
+
+## 17. Dispatch Metrics
+
+Track:
+
+- Average assignment time
+- Offer acceptance rate
+- Offer expiry rate
+- Vendor rejection rate
+- Unassigned pickups
+- Queue backlog size
+
+Metrics must be stored or exported.
+
+---
+
+## 18. Capacity Handling (Phase 2 Ready)
+
+Each vendor must track:
+
+- Active assignments
+- Daily capacity
+- Availability flag
+
+Dispatch must skip vendor if capacity exceeded.
+
+---
+
+## 19. Multi-City Considerations
+
+Dispatch must:
+
+- Filter vendors by region
+- Respect region-specific rules
+- Allow region-specific expiry times
+- Allow region-specific ranking logic
+
+No region hardcoding.
+
+---
+
+## 20. Competitive Offer Model (Phase 2)
+
+System must support:
+
+Parallel dispatch:
+
+1. Create offers for multiple vendors
+2. First ACCEPTED wins
+3. All others auto-expire
+
+Schema already supports this.
+
+Dispatch logic must not assume single-offer-only model.
+
+---
+
+## 21. Guardrails
+
+Dispatch must never:
+
+- Assign vendor without offer record
+- Skip audit log
+- Depend on in-memory timers
+- Block event loop
+- Use sequential HTTP blocking calls for vendor selection
+- Ignore expired offers
+
+---
+
+## 22. Summary
+
+Dispatch Engine must be:
+
+- Queue-based
+- Event-driven
+- Horizontally scalable
+- Idempotent
+- Transaction-safe
+- Region-aware
+- Audit-compliant
+
+It is the backbone of the marketplace.
+
+Any deviation compromises scalability.
+````
