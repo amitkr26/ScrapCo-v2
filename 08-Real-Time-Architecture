@@ -1,0 +1,334 @@
+````markdown id="realtime-architecture-01"
+# ScrapCo V2 — Real-Time Architecture
+
+## 1. Real-Time Philosophy
+
+Polling is forbidden.
+
+ScrapCo V2 must use an event-driven real-time system to:
+
+- Update seller dashboard instantly
+- Notify vendors of offers
+- Reflect assignment changes immediately
+- Eliminate periodic status polling
+- Reduce backend load
+- Improve UX responsiveness
+
+All lifecycle transitions must trigger real-time events.
+
+---
+
+## 2. Real-Time Requirements
+
+The system must support:
+
+- Instant pickup status updates
+- Offer notifications to vendors
+- Assignment confirmation to sellers
+- Pickup started notification
+- Pickup completed notification
+- Transaction updates
+- Admin dashboard live metrics (optional)
+
+---
+
+## 3. Supported Real-Time Technologies
+
+One of the following must be implemented:
+
+Option A (Preferred Simplicity):
+- Supabase Realtime (Postgres change subscriptions)
+
+Option B (More Control):
+- Dedicated WebSocket Gateway (NestJS WebSocket or Socket.IO)
+
+Option C (Advanced Scale):
+- Event broker (Kafka/NATS) + WebSocket Gateway
+
+Phase 1 can use Supabase Realtime.
+Architecture must allow migration to WebSocket Gateway later.
+
+---
+
+## 4. Event Model
+
+All domain events must follow a standardized format.
+
+Example:
+
+```json
+{
+  "event": "PickupAssigned",
+  "entity": "pickup",
+  "entityId": "uuid",
+  "timestamp": "ISO_DATE",
+  "payload": {}
+}
+````
+
+Events must:
+
+* Be deterministic
+* Not expose sensitive data
+* Be scoped to authorized user
+
+---
+
+## 5. Event Sources
+
+Events originate from:
+
+* API layer
+* Worker service
+* Admin actions
+
+Examples:
+
+* PickupCreated
+* VendorOfferSent
+* VendorOfferAccepted
+* PickupAssigned
+* PickupStarted
+* PickupCompleted
+* TransactionCreated
+* RatingSubmitted
+
+---
+
+## 6. Seller Real-Time Flow
+
+When seller creates pickup:
+
+1. PickupCreated event emitted.
+2. Seller subscribes to pickup channel.
+3. When vendor assigned → PickupAssigned event.
+4. When pickup started → PickupStarted event.
+5. When completed → PickupCompleted event.
+
+Seller must never poll for status.
+
+---
+
+## 7. Vendor Real-Time Flow
+
+Vendor subscribes to:
+
+* VendorOffer channel
+* AssignedPickup channel
+
+When offer created:
+
+* VendorOfferSent event triggers push notification.
+
+When offer accepted by someone else:
+
+* VendorOfferExpired event triggers removal from UI.
+
+---
+
+## 8. Channel Structure
+
+Channels must be scoped by:
+
+* User ID
+* Vendor ID
+* Pickup ID
+* Region ID (admin dashboards)
+
+Example:
+
+```
+pickup:<pickupId>
+vendor:<vendorId>
+seller:<sellerId>
+region:<regionId>
+```
+
+No global broadcast channel allowed.
+
+---
+
+## 9. Authorization in Real-Time Layer
+
+Real-time subscription must:
+
+* Verify JWT
+* Verify user ownership of resource
+* Prevent cross-user subscription
+
+Example:
+
+Seller can subscribe only to:
+
+```
+pickup where seller_id = current_user
+```
+
+Vendor can subscribe only to:
+
+```
+offers where vendor_id = current_user
+```
+
+---
+
+## 10. Supabase Realtime Strategy
+
+If using Supabase Realtime:
+
+* Enable RLS
+* Subscribe to changes on:
+
+  * pickups
+  * vendor_offers
+  * assignments
+  * transactions
+
+Client listens to row-level changes filtered by user ID.
+
+No client-side filtering of unauthorized rows.
+
+---
+
+## 11. WebSocket Gateway Strategy (Alternative)
+
+If using WebSocket server:
+
+* WebSocket handshake must validate JWT.
+* Connection bound to user ID.
+* Events pushed only if authorized.
+* Gateway horizontally scalable.
+
+Use Redis pub/sub for multi-instance sync.
+
+---
+
+## 12. Push Notifications (Mobile)
+
+Push notifications required for:
+
+* Offer received
+* Offer expiring soon
+* Pickup assigned
+* Pickup started
+* Pickup completed
+
+Push must be:
+
+* Triggered by worker or API
+* Sent via Expo Push service
+* Not reliant solely on WebSocket
+
+Push and real-time must coexist.
+
+---
+
+## 13. Real-Time Data Model
+
+Clients must:
+
+* Update UI based on event
+* Refetch minimal data if required
+* Avoid full page refresh
+
+Real-time should trigger state reconciliation, not blind UI mutation.
+
+---
+
+## 14. Failure Handling
+
+If real-time connection drops:
+
+* Automatic reconnect logic required.
+* Client must reconcile state on reconnect.
+* No data inconsistency allowed.
+
+If push notification fails:
+
+* Real-time still updates dashboard.
+
+---
+
+## 15. Scalability
+
+Real-time system must support:
+
+* 10,000+ concurrent connections
+* Multi-city isolation
+* Horizontal scaling
+
+If using WebSocket Gateway:
+
+* Use Redis adapter
+* Use stateless scaling
+* No in-memory connection-only state
+
+---
+
+## 16. Performance Constraints
+
+Real-time must:
+
+* Send minimal payload
+* Avoid large object broadcasts
+* Avoid excessive event spam
+* Batch updates if necessary
+
+No event loops or cascading triggers.
+
+---
+
+## 17. Security Constraints
+
+Real-time layer must:
+
+* Not expose internal IDs unnecessarily
+* Not leak region-wide data
+* Not allow user to subscribe to arbitrary channel
+* Not allow replay attacks
+
+JWT must be verified on connection and periodically revalidated.
+
+---
+
+## 18. Event Logging
+
+Every emitted event must:
+
+* Be logged
+* Be traceable to actor
+* Be auditable
+
+Event emission must not silently fail.
+
+---
+
+## 19. Polling Prohibition
+
+The system must never use:
+
+* setInterval polling
+* Background 10-second refresh loops
+* Client-side status re-check loops
+
+Polling is not allowed in production.
+
+---
+
+## 20. Summary
+
+ScrapCo V2 real-time system must be:
+
+* Event-driven
+* Authenticated
+* Region-aware
+* Scalable
+* Push-enabled
+* Polling-free
+* Secure
+* Observable
+
+Real-time architecture is mandatory for marketplace maturity.
+
+```
+```
