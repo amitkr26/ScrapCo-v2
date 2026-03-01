@@ -1,0 +1,407 @@
+```markdown
+# ScrapCo V2 — System Architecture
+
+## 1. Architecture Overview
+
+ScrapCo V2 is a scalable, event-driven, queue-based marketplace platform built to support multi-city expansion without architectural redesign.
+
+The system is composed of:
+
+- Web Application (Next.js)
+- Mobile Application (Expo React Native)
+- Backend API (Node.js / NestJS preferred)
+- Background Worker Service (Queue Processor)
+- PostgreSQL Database (Supabase)
+- Redis (Queue + Caching + Coordination)
+- Real-Time Gateway (WebSocket or Supabase Realtime)
+- External Services (Push Notifications, Monitoring)
+
+The architecture must support:
+
+- Horizontal scaling
+- Multi-instance backend
+- Stateless API layer
+- Stateful dispatch managed via Redis + DB
+- Zero in-memory critical logic
+
+---
+
+## 2. High-Level System Diagram
+
+```
+
+```
+                ┌─────────────────────┐
+                │     Web (Next.js)   │
+                └──────────┬──────────┘
+                           │
+                ┌──────────▼──────────┐
+                │   Mobile (Expo)     │
+                └──────────┬──────────┘
+                           │
+                    HTTPS / WSS
+                           │
+                ┌──────────▼──────────┐
+                │     API Service     │
+                │  (Stateless Layer)  │
+                └──────────┬──────────┘
+                           │
+             ┌─────────────┼─────────────┐
+             │             │             │
+    ┌────────▼───────┐ ┌───▼────────┐ ┌──▼─────────┐
+    │ PostgreSQL DB  │ │   Redis     │ │ Realtime   │
+    │ (Supabase)     │ │ (BullMQ)    │ │ Gateway    │
+    └────────┬───────┘ └───┬────────┘ └──┬─────────┘
+             │              │              │
+             │        ┌─────▼─────┐        │
+             │        │ Worker    │        │
+             │        │ Service   │        │
+             │        └───────────┘        │
+             │                             │
+             └─────────────────────────────┘
+```
+
+```
+
+---
+
+## 3. Monorepo Structure
+
+The project must use a monorepo structure for consistency and shared types.
+
+```
+
+scrapco/
+├── apps/
+│   ├── web/          (Next.js app)
+│   ├── mobile/       (Expo app)
+│   ├── api/          (Backend API)
+│   ├── worker/       (Dispatch worker)
+│
+├── packages/
+│   ├── shared/       (Shared types, constants, validation schemas)
+│   ├── config/       (Environment validation)
+│
+├── infra/
+│   ├── docker/
+│   ├── k8s/ (future optional)
+│
+├── docs/
+│   └── all product documents
+│
+├── .github/
+│   └── workflows/
+│
+└── package.json
+
+```
+
+---
+
+## 4. Service Responsibilities
+
+### 4.1 Web Application
+
+- SEO pages (SSR)
+- Seller dashboard
+- Vendor dashboard
+- Admin dashboard
+- Server components preferred
+- Minimal client-side rendering
+
+No business logic beyond UI-level validation.
+
+---
+
+### 4.2 Mobile Application
+
+- Seller flows
+- Vendor flows
+- Real-time updates
+- Push notifications
+- Location updates
+
+No polling allowed.
+
+---
+
+### 4.3 API Service (Stateless)
+
+Responsibilities:
+
+- Authentication
+- Role validation
+- Input validation
+- Database CRUD
+- Job enqueueing
+- Event publishing
+
+API must:
+
+- Not store dispatch state in memory
+- Not use in-memory timers
+- Not use environment flag-based auth
+
+---
+
+### 4.4 Worker Service
+
+Responsibilities:
+
+- Process dispatch jobs
+- Create vendor offers
+- Handle offer expiry
+- Enforce assignment logic
+- Retry logic
+- Emit lifecycle events
+
+Worker must be horizontally scalable.
+
+---
+
+## 5. Dispatch Architecture
+
+Dispatch is a state machine.
+
+States:
+
+- PENDING
+- OFFER_SENT
+- ACCEPTED
+- ASSIGNED
+- ON_THE_WAY
+- COMPLETED
+- CANCELLED
+- EXPIRED
+- UNASSIGNED
+
+Dispatch flow:
+
+1. PickupCreated → enqueue dispatch job.
+2. Worker fetches eligible vendors.
+3. Offer created in DB.
+4. Delayed job scheduled for expiry.
+5. Vendor accepts/rejects.
+6. If accepted → assignment created.
+7. If rejected/expired → next vendor.
+8. If none left → UNASSIGNED.
+
+All state transitions must be:
+
+- Idempotent
+- Atomic
+- Logged in AuditLogs table
+
+---
+
+## 6. Event-Driven Architecture
+
+System must emit domain events:
+
+- PickupCreated
+- VendorOfferSent
+- VendorOfferAccepted
+- VendorOfferRejected
+- PickupAssigned
+- PickupStarted
+- PickupCompleted
+- TransactionCreated
+- RatingSubmitted
+
+Events must:
+
+- Trigger real-time updates
+- Be auditable
+- Support future analytics pipeline
+
+---
+
+## 7. Region-Aware Architecture
+
+All major entities must include region_id.
+
+Dispatch must filter by:
+
+- Region
+- Vendor active status
+- Vendor capacity
+- Vendor rating
+
+Region must be configuration-driven.
+
+Adding a new city must require:
+
+- Region DB entry
+- Admin setup
+- No code change
+
+---
+
+## 8. Horizontal Scaling Strategy
+
+API Layer:
+- Stateless
+- Scalable via load balancer
+- No in-memory locks
+
+Worker Layer:
+- Multiple instances allowed
+- Queue ensures no duplicate processing
+- Use Redis-based locking
+
+Database:
+- Single source of truth
+- Indexed queries
+- No full table scans in production
+
+---
+
+## 9. Caching Strategy
+
+Redis used for:
+
+- Dispatch queues
+- Rate limiting
+- Temporary vendor availability
+- Short-lived lookup caching
+
+No long-term business state stored only in Redis.
+
+Database remains authoritative.
+
+---
+
+## 10. Security Boundaries
+
+API:
+- JWT validation
+- Role-based guards
+- HMAC verification for vendor callbacks
+- Rate limiting
+- Helmet
+
+Worker:
+- No public endpoints
+- Internal service only
+
+Database:
+- Row-Level Security
+- Service role only inside worker
+
+---
+
+## 11. Deployment Topology
+
+Environment Separation:
+
+- Development
+- Staging
+- Production
+
+Deployment Targets:
+
+Web:
+- Vercel
+
+API:
+- Fly.io or Render
+
+Worker:
+- Separate deployment instance
+
+Redis:
+- Managed Redis Cloud
+
+Database:
+- Supabase managed PostgreSQL
+
+---
+
+## 12. Configuration Strategy
+
+Environment validation must occur at startup.
+
+If required env variable missing:
+- Application must fail to boot.
+
+No fallback to unsafe defaults.
+
+---
+
+## 13. Failure Recovery Strategy
+
+If API crashes:
+- No dispatch state lost
+
+If Worker crashes:
+- Queue retains jobs
+
+If Redis crashes:
+- Dispatch paused safely
+
+If DB unavailable:
+- API returns controlled failure
+
+No silent failures allowed.
+
+---
+
+## 14. Observability Hooks
+
+System must allow:
+
+- Structured logs
+- Correlation IDs
+- Event logging
+- Metrics tracking
+
+All services must support health check endpoint:
+
+GET /health
+
+---
+
+## 15. Architectural Guardrails
+
+The system must never:
+
+- Store dispatch state in memory
+- Depend on polling for lifecycle
+- Allow admin via env toggle
+- Hardcode region logic
+- Allow unverified vendor assignment
+- Delete transaction records
+
+---
+
+## 16. Future-Proofing Considerations
+
+Architecture must allow:
+
+- Payment gateway integration
+- Wallet service
+- Recycler integration
+- Vendor competition model
+- Multi-language support
+- Analytics microservice
+- AI pricing engine
+
+Without redesigning core dispatch.
+
+---
+
+## 17. Summary
+
+ScrapCo V2 architecture is:
+
+- Modular
+- Queue-based
+- Event-driven
+- Stateless at API layer
+- Region-aware
+- Horizontally scalable
+- Security-first
+- Marketplace-ready
+
+Any implementation must strictly adhere to these architectural constraints.
+```
